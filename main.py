@@ -26,3 +26,17 @@ class Order(BaseModel):
 conn = sqlite3.connect("db.sqlite")
 conn.execute("PRAGMA foreign_keys = ON;")
 conn.close()
+
+
+@app.post("/customers/")
+def create_customer(customer: Customer):
+    if customer.cust_id is not None:
+        raise HTTPException(status_code=400, detail="cust_id cannot be set on POST request")
+
+    conn = sqlite3.connect("db.sqlite")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO customers (name, phone) VALUES (?, ?);", (customer.name, customer.phone))
+    customer.cust_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return customer
