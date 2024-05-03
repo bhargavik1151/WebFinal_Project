@@ -193,3 +193,33 @@ def delete_item(item_id: int):
         return total_changes
     finally:
         conn.close()
+
+
+
+@app.post("/orders/")
+def create_order(order: Order):
+    if order.order_id is not None:
+        raise HTTPException(status_code=400, detail="order_id cannot be set on POST request")
+    if order.cust_id is None:
+        raise HTTPException(status_code=400, detail="cust_id is required")
+
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        # Check for existing customer (similar to previous logic)
+        curr.execute("SELECT id FROM customers WHERE id=?;", (order.cust_id,))
+        customer = curr.fetchone()
+        if customer is None:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        # Instead of storing timestamp in request, generate it on server
+        current_timestamp = int(time.time())  # Import time module
+
+        # Insert the order with generated timestamp
+        curr.execute("INSERT INTO orders (notes, cust_id, timestamp) VALUES (?, ?, ?);",
+                     (order.notes, order.cust_id, current_timestamp))
+        new_order_id = curr.lastrowid
+        conn.commit()
+        return Order(order_id=new_order_id, notes=order.notes, cust_id=order.cust_id, timestamp=current_timestamp)
+    finally:
+        conn.close()
