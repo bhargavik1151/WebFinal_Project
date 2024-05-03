@@ -132,3 +132,18 @@ def create_item(item: Item):
         conn.close()
 
 
+@app.get("/items/{item_id}")
+def read_item(item_id: int):
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        curr.execute("SELECT id, name, price FROM items WHERE id = ?", (item_id,))
+        item = curr.fetchone()
+        if item is not None:
+            return {"id": item[0], "name": item[1], "price": item[2]}  # Access elements by index
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
+    finally:
+        conn.close()
+
+
