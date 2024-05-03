@@ -11,3 +11,16 @@ curr.execute("""
              );
              """
              )
+
+
+
+
+curr.execute(
+    """
+    CREATE TABLE items (
+    id INTEGER PRIMARY KEY,
+    name CHAR(64),
+    price REAL
+    );
+"""
+)
