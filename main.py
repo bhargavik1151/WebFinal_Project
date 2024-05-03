@@ -40,3 +40,15 @@ def create_customer(customer: Customer):
     conn.commit()
     conn.close()
     return customer
+
+@app.get("/customers/{cust_id}")
+def read_customer(cust_id: int):
+    conn = sqlite3.connect("db.sqlite")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, phone FROM customers WHERE id=?", (cust_id,))
+    customer = cursor.fetchone()
+    conn.close()
+    if customer is not None:
+        return Customer(cust_id=customer[0], name=customer[1], phone=customer[2])
+    else:
+        raise HTTPException(status_code=404, detail="Customer not found")
