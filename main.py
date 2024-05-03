@@ -147,3 +147,35 @@ def read_item(item_id: int):
         conn.close()
 
 
+@app.put("/items/{item_id}")
+def update_item(item_id: int, item: Item):
+    if item.id != item_id:
+        raise HTTPException(status_code=400, detail="Item ID does not match ID in path")
+
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        curr.execute("SELECT * FROM items WHERE id = ?", (item_id,))
+        existing_item = curr.fetchone()
+        if existing_item is None:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        # Update only provided fields
+        update_query = "UPDATE items SET "
+        update_data = []
+        if item.name is not None:
+            update_query += "name=?, "
+            update_data.append(item.name)
+        if item.price is not None:
+            update_query += "price=? "
+            update_data.append(item.price)
+
+        # Remove trailing comma if only one field is updated
+        update_query = update_query.rstrip(", ") + "WHERE id=?; "
+        update_data.append(item_id)
+
+        curr.execute(update_query, update_data)
+        conn.commit()
+        return {"message": "Item updated successfully"}
+    finally:
+        conn.close()
