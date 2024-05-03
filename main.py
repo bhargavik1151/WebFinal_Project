@@ -21,3 +21,8 @@ class Order(BaseModel):
     notes: str
     cust_id: int
     timestamp: int
+
+# Database connection and foreign key support
+conn = sqlite3.connect("db.sqlite")
+conn.execute("PRAGMA foreign_keys = ON;")
+conn.close()
