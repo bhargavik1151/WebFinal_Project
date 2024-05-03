@@ -24,3 +24,17 @@ curr.execute(
     );
 """
 )
+
+
+curr.execute(
+    """
+CREATE TABLE orders (
+id INTEGER PRIMARY KEY,
+notes TEXT,
+cust_id INTEGER,
+timestamp INTEGER,
+FOREIGN KEY(cust_id) REFERENCES customers(id)
+);
+"""
+)
+
