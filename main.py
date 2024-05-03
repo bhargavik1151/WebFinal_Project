@@ -103,5 +103,15 @@ def update_customer(cust_id: int, customer: Customer):
         # This shouldn't happen, but handle potential error
         raise HTTPException(status_code=500, detail="Internal server error during update")
 
+@app.delete("/customers/{cust_id}")
+def delete_customer(cust_id: int):
+    conn = sqlite3.connect("db.sqlite")
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM customers WHERE id=?;", (cust_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "Customer deleted successfully"}
+
+
 
 
