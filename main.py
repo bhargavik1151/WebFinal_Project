@@ -241,3 +241,50 @@ def read_order(order_id: int):
             raise HTTPException(status_code=404, detail="Order not found")
     finally:
         conn.close()
+
+
+@app.put("/orders/{order_id}")
+def update_order(order_id: int, order: Order):
+    if order.order_id is not None and order.order_id != order_id:
+        raise HTTPException(status_code=400, detail="order_id does not match ID in path")
+
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        # Check if the order exists (unchanged)
+        curr.execute("SELECT id FROM orders WHERE id=?;", (order_id,))
+        existing_order = curr.fetchone()
+        if existing_order is None:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        # Check if the customer exists (unchanged)
+        curr.execute("SELECT id FROM customers WHERE id=?;", (order.cust_id,))
+        existing_customer = curr.fetchone()
+        if existing_customer is None:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        # Update logic changed: instead of updating all fields, allow partial updates
+        update_query = "UPDATE orders SET "
+        update_data = []
+        if order.notes is not None:
+            update_query += "notes=?, "
+            update_data.append(order.notes)
+
+        # No update for timestamp as it's not editable
+
+        # Remove trailing comma if only notes are updated
+        update_query = update_query.rstrip(", ") + "WHERE id=?; "
+        update_data.append(order_id)
+
+        # Execute update query with parameters (if any)
+        if update_data:
+            curr.execute(update_query, update_data)
+        else:
+            # No update needed, inform user
+            return {"message": "No changes provided for update"}
+
+        conn.commit()
+        # Don't return the entire order, just a success message
+        return {"message": "Order updated successfully"}
+    finally:
+        conn.close()
