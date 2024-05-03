@@ -179,3 +179,17 @@ def update_item(item_id: int, item: Item):
         return {"message": "Item updated successfully"}
     finally:
         conn.close()
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: int):
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        curr.execute("DELETE FROM items WHERE id=?;", (item_id,))
+        total_changes = conn.total_changes
+        conn.commit()
+        if total_changes == 0:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return total_changes
+    finally:
+        conn.close()
