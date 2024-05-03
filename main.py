@@ -223,3 +223,21 @@ def create_order(order: Order):
         return Order(order_id=new_order_id, notes=order.notes, cust_id=order.cust_id, timestamp=current_timestamp)
     finally:
         conn.close()
+
+
+@app.get("/orders/{order_id}")
+def read_order(order_id: int):
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        # Retrieve the order details (unchanged)
+        curr.execute("SELECT id, notes, cust_id, timestamp FROM orders WHERE id=?", (order_id,))
+        order = curr.fetchone()
+
+        # Check if the order exists (unchanged)
+        if order is not None:
+            return Order(order_id=order[0], notes=order[1], cust_id=order[2], timestamp=order[3])
+        else:
+            raise HTTPException(status_code=404, detail="Order not found")
+    finally:
+        conn.close()
