@@ -288,3 +288,29 @@ def update_order(order_id: int, order: Order):
         return {"message": "Order updated successfully"}
     finally:
         conn.close()
+
+
+@app.delete("/orders/{order_id}")
+async def delete_order(order_id: int):
+    try:
+        # Connect to the database
+        conn = sqlite3.connect("db.sqlite")
+        curr = conn.cursor()
+
+        # Check if the order exists using a single query
+        exists = await curr.execute(
+            "SELECT EXISTS(SELECT 1 FROM orders WHERE id=?)", (order_id,)
+        )
+
+        # Process deletion based on existence
+        if exists.fetchone()[0]:
+            # Delete the order
+            await curr.execute("DELETE FROM orders WHERE id=?;", (order_id,))
+            conn.commit()
+            return {"message": "Order deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+    finally:
+        # Close the connection (using async context manager)
+        await conn.close()
