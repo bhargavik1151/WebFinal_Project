@@ -113,5 +113,22 @@ def delete_customer(cust_id: int):
     return {"message": "Customer deleted successfully"}
 
 
+@app.post("/items/")
+def create_item(item: Item):
+    conn = sqlite3.connect("db.sqlite")
+    curr = conn.cursor()
+    try:
+        # Check for duplicate item name before inserting
+        curr.execute("SELECT id FROM items WHERE name = ?", (item.name,))
+        existing_item = curr.fetchone()
+        if existing_item:
+            raise HTTPException(status_code=400, detail="Item with that name already exists")
+
+        curr.execute("INSERT INTO items (name, price) VALUES (?, ?);", (item.name, item.price))
+        conn.commit()
+        new_id = curr.lastrowid
+        return {"id": new_id, "name": item.name, "price": item.price}
+    finally:
+        conn.close()
 
 
