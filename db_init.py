@@ -38,3 +38,16 @@ FOREIGN KEY(cust_id) REFERENCES customers(id)
 """
 )
 
+
+curr.execute(
+    """
+    CREATE TABLE order_list(
+    id INTEGER PRIMARY KEY,
+    order_id INTEGER,
+    item_id INTEGER,
+    FOREIGN KEY(order_id) REFERENCES orders(id),
+    FOREIGN KEY(item_id) REFERENCES items(id)
+);
+"""
+)
+
